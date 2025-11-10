@@ -69,7 +69,6 @@ export default class UniversalDI extends DeviceRTU {
       const bitsInThisByte = Math.min(8, this.options.сountDI - offset);
       this.fillDI(offset, byteValue, bitsInThisByte);
     }
-    this.render();
   }
 
 /**

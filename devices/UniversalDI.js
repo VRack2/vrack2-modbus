@@ -75,7 +75,6 @@ class UniversalDI extends DeviceRTU_1.default {
                 const bitsInThisByte = Math.min(8, this.options.сountDI - offset);
                 this.fillDI(offset, byteValue, bitsInThisByte);
             }
-            this.render();
         });
     }
     /**
