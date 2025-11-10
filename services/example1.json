@@ -1,0 +1,40 @@
+{
+	"devices": [
+		{
+			"id": "Provider",
+			"type": "vrack2-net.ConverterClient",
+			"options": {
+				"socket": {
+					"host": "172.16.101.88",
+					"port": 4001
+				},
+				"debug": true
+			}
+		},
+		{
+			"id": "UDI1",
+			"type": "vrack2-modbus.UniversalDI",
+			"options": {
+				"address": 0,
+				"сountDI": 32
+			}
+		},
+		{
+			"id": "Delay",
+			"type": "vrack2-basic.Delay",
+			"options": {
+				"timers": [
+					{
+						"timeout": 200,
+						"relative": true
+					}
+				]
+			}
+		}
+	],
+	"connections": [
+		"Provider.provider -> UDI1.provider",
+		"UDI1.provider-> Delay.gate1",
+		"Delay.gate1 -> Provider.gate"
+	]
+}
