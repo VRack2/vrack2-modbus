@@ -22,7 +22,8 @@ export default class DeviceRTU extends Device {
   checkOptions(): { [key: string]: BasicType; } {
     return {
       address: Rule.number().integer().default(1).min(0).max(254).description('Адрес устройства').example(0),
-      timeout: Rule.number().integer().default(700).min(0).description('Таймаут запроса в мс').example(0)
+      timeout: Rule.number().integer().default(700).min(0).description('Таймаут запроса в мс').example(0),
+      offTimeout: Rule.number().integer().min(0).default(30000).description('Таймаут неприхода провайдера после которого считается что устройство оффлайн')
     }
   }
 
@@ -47,6 +48,8 @@ export default class DeviceRTU extends Device {
     method: () => any
   }>();
   queueIndex = 1
+
+  offlineTimer: NodeJS.Timeout | number = 0
 
   /**
    * Обработчик входа провайдера
@@ -73,6 +76,7 @@ export default class DeviceRTU extends Device {
    * Выполняется перед запуском update
   */
   private iGate() {
+    if (this.offlineTimer) clearTimeout(this.offlineTimer) // Очищаем таймер оффлайна
     this.Provider.setDevice(this.type, this.id)  // Устанавливаем устройство
     this.shares.progress = true
     this.render()
@@ -82,6 +86,10 @@ export default class DeviceRTU extends Device {
    * Выполняется после завершение update
   */
   private oGate() {
+    this.offlineTimer = setTimeout(()=>{
+      this.offlineTimer = 0
+      this.shares.online = false
+    }, this.options.offTimeout)
     this.shares.progress = false
     this.Provider.clearDevice() // Очищаем устройство
     this.ports.output.provider.push(this.Provider)

@@ -24,6 +24,7 @@ class DeviceRTU extends vrack2_core_1.Device {
         */
         this.queue = new Map();
         this.queueIndex = 1;
+        this.offlineTimer = 0;
     }
     outputs() {
         return {
@@ -38,7 +39,8 @@ class DeviceRTU extends vrack2_core_1.Device {
     checkOptions() {
         return {
             address: vrack2_core_1.Rule.number().integer().default(1).min(0).max(254).description('Адрес устройства').example(0),
-            timeout: vrack2_core_1.Rule.number().integer().default(700).min(0).description('Таймаут запроса в мс').example(0)
+            timeout: vrack2_core_1.Rule.number().integer().default(700).min(0).description('Таймаут запроса в мс').example(0),
+            offTimeout: vrack2_core_1.Rule.number().integer().min(0).default(30000).description('Таймаут неприхода провайдера после которого считается что устройство оффлайн')
         };
     }
     /**
@@ -69,6 +71,8 @@ class DeviceRTU extends vrack2_core_1.Device {
      * Выполняется перед запуском update
     */
     iGate() {
+        if (this.offlineTimer)
+            clearTimeout(this.offlineTimer); // Очищаем таймер оффлайна
         this.Provider.setDevice(this.type, this.id); // Устанавливаем устройство
         this.shares.progress = true;
         this.render();
@@ -77,6 +81,10 @@ class DeviceRTU extends vrack2_core_1.Device {
      * Выполняется после завершение update
     */
     oGate() {
+        this.offlineTimer = setTimeout(() => {
+            this.offlineTimer = 0;
+            this.shares.online = false;
+        }, this.options.offTimeout);
         this.shares.progress = false;
         this.Provider.clearDevice(); // Очищаем устройство
         this.ports.output.provider.push(this.Provider);

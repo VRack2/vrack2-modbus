@@ -1,5 +1,6 @@
 /// <reference types="node" />
 /// <reference types="node" />
+/// <reference types="node" />
 import { Device, BasicPort, BasicType } from "vrack2-core";
 import TCPProvider from "../../vrack2-net/devices/classes/TCPProvider";
 export default class DeviceRTU extends Device {
@@ -28,6 +29,7 @@ export default class DeviceRTU extends Device {
         method: () => any;
     }>;
     queueIndex: number;
+    offlineTimer: NodeJS.Timeout | number;
     /**
      * Обработчик входа провайдера
      *
