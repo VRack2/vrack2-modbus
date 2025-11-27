@@ -5,17 +5,9 @@ import { ModbusRTU } from "./classes/ModbusRTU";
 
 export default class DeviceRTU extends Device {
 
-  outputs(): { [key: string]: BasicPort; } {
-    return {
-      provider: Port.standart().description('Порт отправки класса TCPProvider').requirement(
-        Rule.object().description('Класс provider см. vrack2-net.ConverterClient')
-      )
-    }
-  }
-
   inputs(): { [key: string]: BasicPort; } {
     return {
-      provider: Port.standart().description('Порт для получения класса TCPProvider vrack2-net.ConverterClient')
+      bus: Port.return().description('Порт для получения класса TCPProvider vrack2-net.ConverterClient')
     }
   }
 
@@ -57,17 +49,19 @@ export default class DeviceRTU extends Device {
    * При получении провайдера - мы получаем контроль
    * 
   */
-  async inputProvider(provider: TCPProvider) {
+  async inputBus(provider: TCPProvider) {
     if (this.shares.process) return // Такого по хорошему быть не должно
     this.Provider = provider
+    this.Provider.canRequest()
     this.iGate()
     try {
-      this.runQueue()
+      await this.runQueue()
       await this.update()
       this.shares.online = true
     } catch (err) {
       this.shares.online = false
       this.error('Update device error', err as Error)
+      throw err
     }
     this.oGate()
   }
@@ -77,7 +71,6 @@ export default class DeviceRTU extends Device {
   */
   private iGate() {
     if (this.offlineTimer) clearTimeout(this.offlineTimer) // Очищаем таймер оффлайна
-    this.Provider.setDevice(this.type, this.id)  // Устанавливаем устройство
     this.shares.progress = true
     this.render()
   }
@@ -91,8 +84,6 @@ export default class DeviceRTU extends Device {
       this.shares.online = false
     }, this.options.offTimeout)
     this.shares.progress = false
-    this.Provider.clearDevice() // Очищаем устройство
-    this.ports.output.provider.push(this.Provider)
     this.render()
   }
 
@@ -103,7 +94,6 @@ export default class DeviceRTU extends Device {
   async update() {
 
   }
-
 
   /**
    * Добавление в очередь задачи которая будет выполнена

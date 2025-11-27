@@ -26,14 +26,9 @@ class DeviceRTU extends vrack2_core_1.Device {
         this.queueIndex = 1;
         this.offlineTimer = 0;
     }
-    outputs() {
-        return {
-            provider: vrack2_core_1.Port.standart().description('Порт отправки класса TCPProvider').requirement(vrack2_core_1.Rule.object().description('Класс provider см. vrack2-net.ConverterClient'))
-        };
-    }
     inputs() {
         return {
-            provider: vrack2_core_1.Port.standart().description('Порт для получения класса TCPProvider vrack2-net.ConverterClient')
+            bus: vrack2_core_1.Port.return().description('Порт для получения класса TCPProvider vrack2-net.ConverterClient')
         };
     }
     checkOptions() {
@@ -49,20 +44,22 @@ class DeviceRTU extends vrack2_core_1.Device {
      * При получении провайдера - мы получаем контроль
      *
     */
-    inputProvider(provider) {
+    inputBus(provider) {
         return __awaiter(this, void 0, void 0, function* () {
             if (this.shares.process)
                 return; // Такого по хорошему быть не должно
             this.Provider = provider;
+            this.Provider.canRequest();
             this.iGate();
             try {
-                this.runQueue();
+                yield this.runQueue();
                 yield this.update();
                 this.shares.online = true;
             }
             catch (err) {
                 this.shares.online = false;
                 this.error('Update device error', err);
+                throw err;
             }
             this.oGate();
         });
@@ -73,7 +70,6 @@ class DeviceRTU extends vrack2_core_1.Device {
     iGate() {
         if (this.offlineTimer)
             clearTimeout(this.offlineTimer); // Очищаем таймер оффлайна
-        this.Provider.setDevice(this.type, this.id); // Устанавливаем устройство
         this.shares.progress = true;
         this.render();
     }
@@ -86,8 +82,6 @@ class DeviceRTU extends vrack2_core_1.Device {
             this.shares.online = false;
         }, this.options.offTimeout);
         this.shares.progress = false;
-        this.Provider.clearDevice(); // Очищаем устройство
-        this.ports.output.provider.push(this.Provider);
         this.render();
     }
     /**

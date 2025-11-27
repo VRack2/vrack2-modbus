@@ -4,9 +4,6 @@
 import { Device, BasicPort, BasicType } from "vrack2-core";
 import TCPProvider from "../../vrack2-net/devices/classes/TCPProvider";
 export default class DeviceRTU extends Device {
-    outputs(): {
-        [key: string]: BasicPort;
-    };
     inputs(): {
         [key: string]: BasicPort;
     };
@@ -36,7 +33,7 @@ export default class DeviceRTU extends Device {
      * При получении провайдера - мы получаем контроль
      *
     */
-    inputProvider(provider: TCPProvider): Promise<void>;
+    inputBus(provider: TCPProvider): Promise<void>;
     /**
      * Выполняется перед запуском update
     */
