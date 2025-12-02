@@ -25,11 +25,11 @@ git clone https://github.com/VRack2/vrack2-other-rtu
 
 **Для организации опроса** устроиств сети типа Ethernet ↔ Serial / RS485 / CAN используется [ConverterBus](https://github.com/VRack2/vrack2-net/blob/main/docs/ConverterBus.md)
 
- [DeviceRTU](./docs/DeviceRTU.md) - Класс для создания своих абстракций для реальных ModbusRTU устройств
- [ModbusRTU](./src/classes/ModbusRTU.ts) - Статический класс для работы с протоколом ModbusRTU
- [Пример сервиса](./services/example1.json) - Самый просто пример сервиса для организации опроса 1 устройства
- [UniversalDI](./src/UniversalDI.ts) - Простое универсальное устройство DI до 64 портов
- [Сложный пример устройства](./src/Example1.ts) - Использование экшенов очередей и тп.
+  - [DeviceRTU](./docs/DeviceRTU.md) - Класс для создания своих абстракций для реальных ModbusRTU устройств
+  - [ModbusRTU](./src/classes/ModbusRTU.ts) - Статический класс для работы с протоколом ModbusRTU
+  - [Пример сервиса](./services/example1.json) - Самый просто пример сервиса для организации опроса 1 устройства
+  - [UniversalDI](./src/UniversalDI.ts) - Простое универсальное устройство DI до 64 портов
+  - [Сложный пример устройства](./src/Example1.ts) - Использование экшенов очередей и тп.
 
 ## Дополнительно
 
