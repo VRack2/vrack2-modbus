@@ -1,4 +1,5 @@
 {
     "UniversalDI": "devices/UniversalDI",
+    "UniversalDO": "devices/UniversalDO",
     "Example1": "devices/Example1"
 }
