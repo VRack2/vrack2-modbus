@@ -1,6 +1,6 @@
 {
   "name": "vrack2-modbus",
-  "version": "1.0.0",
+  "version": "2.0.0",
   "description": "Устройства VRack2 для работы с modbus",
   "main": "list.json",
   "scripts": {
