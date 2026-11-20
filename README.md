@@ -1,6 +1,6 @@
 # VRack2-Modbus
 
-Упращенная работа с устройстами которые работают по протоколу Modbus. 
+Упрощённая работа с устройствами которые работают по протоколу Modbus. 
 
 ## Установка
 
@@ -12,14 +12,29 @@
 
 ```
 cd /opt/vrack2-service/devices/
-git clone https://github.com/VRack2/vrack2-other-rtu
+git clone https://github.com/VRack2/vrack2-modbus
 ```
 
 ----------
 
-На данный момент все устройства не протестированны достаточно хорошо, но уже сейчас могут служить основой ваших устройств.
+## Тесты
 
-----------
+Бинарные тесты устройств гоняются настоящим ядром (graph-фикстуры `tests/*.js`, см. [vrack2-test/README](../vrack2-test/README.md)), сборка TypeScript — локальным `tsc`:
+
+```bash
+cd devices/vrack2-modbus
+npm run build   # src/*.ts -> devices/*.js
+npm test        # node run/run-test.js по каждому tests/*.js
+```
+
+| тест | что проверяет |
+|---|---|
+| `tests/load.js` | весь `list.json` собирается и стартует, материализация динамических портов `do%d/di%d` |
+| `tests/universal-di.js` | маска DI ставится стендом, побитовый разбор, частичный байт, `eachGate` (изменения / каждый цикл) |
+| `tests/universal-do.js` | желание `do*` -> запись `0x0F` -> чтение состояния `0x01` -> `di*`; нет повторных записей при совпадении |
+| `tests/rtu-lab.js` | граф `service-examples/rtu-lab.json` собирается целиком: оба мастера на одной шине против стенда |
+
+Живой стенд для проверок через MCP/платформу — `service-examples/rtu-lab.json` (порт 15051).
 
 ## Использование
 
@@ -27,9 +42,13 @@ git clone https://github.com/VRack2/vrack2-other-rtu
 
   - [DeviceRTU](./docs/DeviceRTU.md) - Класс для создания своих абстракций для реальных ModbusRTU устройств
   - [ModbusRTU](./src/classes/ModbusRTU.ts) - Статический класс для работы с протоколом ModbusRTU
-  - [Пример сервиса](./services/example1.json) - Самый просто пример сервиса для организации опроса 1 устройства
-  - [UniversalDI](./src/UniversalDI.ts) - Простое универсальное устройство DI до 64 портов
+  - [UniversalDI](./docs/UniversalDI.md) - Простое универсальное устройство DI до 64 портов (чтение `0x02`)
+  - [UniversalDO](./docs/UniversalDO.md) - Универсальное устройство DO до 64 портов (чтение состояния `0x01`, запись маски `0x0F`)
+  - [ModbusRTUSlave](./docs/ModbusRTUSlave.md) - Виртуальное ведомое (банк coils/discrete/holding) — стенд для тестов и лабораторных сервисов без железа
   - [Сложный пример устройства](./src/Example1.ts) - Использование экшенов очередей и тп.
+  - [Пример сервиса](./services/example1.json) - Самый простой пример сервиса для организации опроса 1 устройства
+  - [Пример сервиса DO](./service-examples/universal-do.json) - Сервис с UniversalDO на шине ConverterBus
+  - [Лабораторный сервис](./service-examples/rtu-lab.json) - UniversalDI + UniversalDO против ModbusRTUSlave (порт 15051) — работает без железа, подходит для проверок через MCP
 
 ## Дополнительно
 
