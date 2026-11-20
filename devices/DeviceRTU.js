@@ -11,13 +11,13 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 Object.defineProperty(exports, "__esModule", { value: true });
 const vrack2_core_1 = require("vrack2-core");
 const ModbusRTU_1 = require("./classes/ModbusRTU");
+vrack2_core_1.ErrorManager.register('DeviceRTU', 'V2MODBUS_UPDATE_ERROR', 'Modbus RTU device update cycle failed — the device is marked offline', {
+    id: vrack2_core_1.Rule.string().example('device-1').description('Device id'),
+    address: vrack2_core_1.Rule.number().required().example(1).description('Modbus slave address'),
+});
 class DeviceRTU extends vrack2_core_1.Device {
     constructor() {
         super(...arguments);
-        this.shares = {
-            online: false,
-            process: false
-        };
         /**
          * Очередь
          *
@@ -36,6 +36,12 @@ class DeviceRTU extends vrack2_core_1.Device {
             address: vrack2_core_1.Rule.number().integer().default(1).min(0).max(254).description('Адрес устройства').example(0),
             timeout: vrack2_core_1.Rule.number().integer().default(700).min(0).description('Таймаут запроса в мс').example(0),
             offTimeout: vrack2_core_1.Rule.number().integer().min(0).default(30000).description('Таймаут неприхода провайдера после которого считается что устройство оффлайн')
+        };
+    }
+    onRegister() {
+        this.shares = {
+            online: false,
+            process: false
         };
     }
     /**
@@ -58,7 +64,7 @@ class DeviceRTU extends vrack2_core_1.Device {
             }
             catch (err) {
                 this.shares.online = false;
-                this.error('Update device error', err);
+                this.error('modbus rtu update failed', vrack2_core_1.ErrorManager.make('V2MODBUS_UPDATE_ERROR', { id: this.id, address: this.options.address }).add(err));
                 throw err;
             }
             this.oGate();
@@ -155,8 +161,8 @@ class DeviceRTU extends vrack2_core_1.Device {
         const req = ModbusRTU_1.ModbusRTU.makeRequest(this.options.address, cmd, addr, quantity, writeData);
         return this.request(req);
     }
-    request(buffer, maxRetries = 3) {
-        return __awaiter(this, void 0, void 0, function* () {
+    request(buffer_1) {
+        return __awaiter(this, arguments, void 0, function* (buffer, maxRetries = 3) {
             this.Provider.setPkgCheck(ModbusRTU_1.ModbusRTU.isCompletePacket);
             yield this.Provider.autoRequest(buffer, this.options.timeout, maxRetries);
             const resp = this.Provider.getBuffer();

@@ -43,18 +43,6 @@ const DeviceRTU_1 = __importDefault(require("./DeviceRTU"));
  * @see makeSpecPkg
 */
 class Example1 extends DeviceRTU_1.default {
-    constructor() {
-        super(...arguments);
-        this.shares = {
-            online: false,
-            process: false,
-            settings: {
-                up: 0,
-                down: 0,
-                gist: 0
-            }
-        };
-    }
     actions() {
         return {
             'set.up': vrack2_core_1.Action.global().requirements({
@@ -72,6 +60,17 @@ class Example1 extends DeviceRTU_1.default {
             'set.speed': vrack2_core_1.Action.global().requirements({
                 value: vrack2_core_1.Rule.number().integer().default(3).min(1).max(5).description('Скорость 1-2400 2-4800 3-9600 ...')
             }).description('Установка скорости (Широковещательный запрос)'),
+        };
+    }
+    onRegister() {
+        this.shares = {
+            online: false,
+            process: false,
+            settings: {
+                up: 0,
+                down: 0,
+                gist: 0
+            }
         };
     }
     /**
@@ -168,7 +167,7 @@ class Example1 extends DeviceRTU_1.default {
         return __awaiter(this, void 0, void 0, function* () {
             yield this.updateArray([
                 { name: 'snow', address: 0x00 },
-                { name: 'interC', address: 0x03 },
+                { name: 'interC', address: 0x03 }, // Внутренняя температура
                 { name: 'sense', address: 0x05 }, // Уровень ацп
             ], 0x03, this.shares);
             // Обновляет базовые флаги
@@ -180,8 +179,8 @@ class Example1 extends DeviceRTU_1.default {
             this.render();
         });
     }
-    updateArray(regs, command, obj, queue = true) {
-        return __awaiter(this, void 0, void 0, function* () {
+    updateArray(regs_1, command_1, obj_1) {
+        return __awaiter(this, arguments, void 0, function* (regs, command, obj, queue = true) {
             for (const reg of regs) {
                 if (queue)
                     yield this.runQueue();

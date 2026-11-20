@@ -26,17 +26,16 @@ export default class UniversalDI extends DeviceRTU {
     const parent = super.outputs()
     return {
       ...parent,
-      'di%d': Port.standart().dynamic(this.options.сountDI).description('Порт для получения значения DI устройства')
+      'di%d': Port.standard().dynamic(this.options.сountDI).description('Порт для получения значения DI устройства')
     }
   }
 
-  shares: any = {
-    online: false,
-    process: false,
-    di: [] // Значение наших дискретных входов (0 индекс = 1 порт)
-  }
-
-  preProcess(): void {
+  onRegister(): void {
+    this.shares = {
+      online: false,
+      process: false,
+      di: [] // Значение наших дискретных входов (0 индекс = 1 порт)
+    }
     for (let i = 1; i <= this.options.сountDI; i++) this.shares.di.push(0)
   }
 

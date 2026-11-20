@@ -51,13 +51,15 @@ export default class Example1 extends DeviceRTU {
     }
   }
 
-  shares: any = {
-    online: false,
-    process: false,
-    settings: {
-      up: 0,
-      down: 0,
-      gist: 0
+  onRegister() {
+    this.shares = {
+      online: false,
+      process: false,
+      settings: {
+        up: 0,
+        down: 0,
+        gist: 0
+      }
     }
   }
 

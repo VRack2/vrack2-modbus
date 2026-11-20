@@ -1,7 +1,13 @@
-import { Device, Port, Rule, BasicPort, BasicType } from "vrack2-core";
+import { Device, ErrorManager, Port, Rule, BasicPort, BasicType } from "vrack2-core";
 
 import TCPProvider from "../../vrack2-net/devices/classes/TCPProvider"
 import { ModbusRTU } from "./classes/ModbusRTU";
+
+ErrorManager.register('DeviceRTU', 'V2MODBUS_UPDATE_ERROR',
+  'Modbus RTU device update cycle failed — the device is marked offline', {
+  id: Rule.string().example('device-1').description('Device id'),
+  address: Rule.number().required().example(1).description('Modbus slave address'),
+})
 
 export default class DeviceRTU extends Device {
 
@@ -19,9 +25,11 @@ export default class DeviceRTU extends Device {
     }
   }
 
-  shares: any = {
-    online: false,
-    process: false
+  onRegister() {
+    this.shares = {
+      online: false,
+      process: false
+    }
   }
 
   /**
@@ -60,7 +68,7 @@ export default class DeviceRTU extends Device {
       this.shares.online = true
     } catch (err) {
       this.shares.online = false
-      this.error('Update device error', err as Error)
+      this.error('modbus rtu update failed', ErrorManager.make('V2MODBUS_UPDATE_ERROR', { id: this.id, address: this.options.address }).add(err as Error))
       throw err
     }
     this.oGate()

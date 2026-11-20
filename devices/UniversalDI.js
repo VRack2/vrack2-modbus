@@ -21,14 +21,6 @@ const path_1 = __importDefault(require("path"));
  * Универсальное устроство до 64 входящих портов
 */
 class UniversalDI extends DeviceRTU_1.default {
-    constructor() {
-        super(...arguments);
-        this.shares = {
-            online: false,
-            process: false,
-            di: [] // Значение наших дискретных входов (0 индекс = 1 порт)
-        };
-    }
     description() {
         return fs_1.default.readFileSync(path_1.default.join(path_1.default.dirname(__dirname), 'docs', 'UniversalDI.md')).toString('utf-8');
     }
@@ -38,9 +30,14 @@ class UniversalDI extends DeviceRTU_1.default {
     }
     outputs() {
         const parent = super.outputs();
-        return Object.assign(Object.assign({}, parent), { 'di%d': vrack2_core_1.Port.standart().dynamic(this.options.сountDI).description('Порт для получения значения DI устройства') });
+        return Object.assign(Object.assign({}, parent), { 'di%d': vrack2_core_1.Port.standard().dynamic(this.options.сountDI).description('Порт для получения значения DI устройства') });
     }
-    preProcess() {
+    onRegister() {
+        this.shares = {
+            online: false,
+            process: false,
+            di: [] // Значение наших дискретных входов (0 индекс = 1 порт)
+        };
         for (let i = 1; i <= this.options.сountDI; i++)
             this.shares.di.push(0);
     }

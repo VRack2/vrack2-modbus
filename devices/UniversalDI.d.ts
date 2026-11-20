@@ -12,8 +12,7 @@ export default class UniversalDI extends DeviceRTU {
     outputs(): {
         [key: string]: BasicPort;
     };
-    shares: any;
-    preProcess(): void;
+    onRegister(): void;
     /**
      * Метод запускается внутри DeviceRTU после установок и проверок всех флагов
      *

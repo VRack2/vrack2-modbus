@@ -1,5 +1,3 @@
-/// <reference types="node" />
-/// <reference types="node" />
 import { BasicAction } from "vrack2-core";
 import DeviceRTU from "./DeviceRTU";
 /**
@@ -32,7 +30,7 @@ export default class Example1 extends DeviceRTU {
     actions(): {
         [key: string]: BasicAction;
     };
-    shares: any;
+    onRegister(): void;
     /**
      * Установка нижней планки нагревателя
      * 0030H	40049	Верхний предел темп. подогрева	Чтение/Запись	03/06	35°C	0~70°C
