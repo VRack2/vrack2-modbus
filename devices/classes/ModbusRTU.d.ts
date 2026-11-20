@@ -1,5 +1,3 @@
-/// <reference types="node" />
-/// <reference types="node" />
 /**
  * Интерфейс для представления разобранного Modbus RTU ответа
  *
@@ -7,7 +5,6 @@
  * @property {number} functionCode - Код функции Modbus (0x01-0x10)
  * @property {number} byteCount - Количество байт в поле данных
  * @property {Buffer} data - Буфер с полезными данными ответа
- * @property {number} [exceptionCode] - Код исключения (присутствует только в ответах с ошибкой)
  *
  * @example
  * // Успешный ответ на чтение holding registers
@@ -18,27 +15,17 @@
  *   data: Buffer.from([0x00, 0x0A, 0x00, 0x14, 0x01, 0x2C])
  * };
  *
- * @example
- * // Ответ с исключением (ошибка)
- * const errorResponse: ModbusResponse = {
- *   slaveId: 1,
- *   functionCode: 0x83, // 0x03 + 0x80 (бит ошибки)
- *   byteCount: 0,
- *   data: Buffer.alloc(0),
- *   exceptionCode: 0x02 // Неверный адрес данных
- * };
- *
  * @description
  * Интерфейс используется методом `ModbusRTU.parseResponse()` для возврата
- * структурированных данных из сырого Modbus-пакета. При наличии бита ошибки
- * в старшем бите functionCode, поле exceptionCode содержит код ошибки.
+ * структурированных данных из сырого Modbus-пакета. Ответ-исключение
+ * (бит `0x80` в коде функции) методом `parseResponse()` не возвращается —
+ * вместо этого бросается формализованная ошибка `V2MODBUS_EXCEPTION`.
  */
 export interface ModbusResponse {
     slaveId: number;
     functionCode: number;
     byteCount: number;
     data: Buffer;
-    exceptionCode?: number;
 }
 /**
  * Cтатический класс для работы с протоколом Modbus RTU,
@@ -139,6 +126,11 @@ export declare class ModbusRTU {
    * const response = Buffer.from([0x01, 0x03, 0x04, 0x00, 0x0A, 0x00, 0x14, 0x4B, 0x08]);
    * const parsed = ModbusRTU.parseResponse(response);
    * // { slaveId: 1, functionCode: 3, byteCount: 4, data: <Buffer 00 0a 00 14> }
+   * @example
+   * // Ответ-исключение бросает формализованную ошибку, а не возвращается
+   * ModbusRTU.parseResponse(Buffer.from([0x01, 0x82, 0x02, 0xC2, 0x33]));
+   * // throws ErrorManager 'V2MODBUS_EXCEPTION' { slaveId: 1, functionCode: 2, exceptionCode: 2 }
+   * @throws V2MODBUS_PACKET_TOO_SHORT | V2MODBUS_CRC_CHECK_FAILED | V2MODBUS_EXCEPTION
    */
     static parseResponse(buffer: Buffer): ModbusResponse;
     /**

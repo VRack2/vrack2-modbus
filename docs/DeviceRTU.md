@@ -108,7 +108,11 @@ const resp = await this.simpleRequest(
 - `0x02` — Read Discrete Inputs
 - `0x03` — Read Holding Registers
 - `0x04` — Read Input Registers
-- `0x05`, `0x06`, `0x0F`, `0x10` — запись (требует `writeData`)
+- `0x05` — Write Single Coil (значение передаётся в `quantity` как `0`/`1`)
+- `0x06` — Write Single Register (значение передаётся в `quantity`)
+- `0x0F`, `0x10` — постраничная запись массива (требует `writeData`)
+
+Ответ ведомого с исключением (`func | 0x80`) распознаётся автоматически: `ModbusRTU.parseResponse` бросает формализованную ошибку `V2MODBUS_EXCEPTION` (`slaveId`, `functionCode`, `exceptionCode`) — коды Modbus сами по себе читателю ни о чём не говорят, поэтому это ошибка, а не поле ответа. Запрос считается неудачным, цикл `update` падает (ошибка оборачивается в `V2MODBUS_UPDATE_ERROR`, внутри — `V2MODBUS_EXCEPTION`), устройство уходит в `offline`.
 
 ### Низкоуровневый запрос
 

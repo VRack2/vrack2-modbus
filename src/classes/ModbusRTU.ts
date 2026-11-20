@@ -1,4 +1,4 @@
-import { ErrorManager } from "vrack2-core";
+import { ErrorManager, Rule } from "vrack2-core";
 
 /**
  * Интерфейс для представления разобранного Modbus RTU ответа
@@ -7,7 +7,6 @@ import { ErrorManager } from "vrack2-core";
  * @property {number} functionCode - Код функции Modbus (0x01-0x10)
  * @property {number} byteCount - Количество байт в поле данных
  * @property {Buffer} data - Буфер с полезными данными ответа
- * @property {number} [exceptionCode] - Код исключения (присутствует только в ответах с ошибкой)
  * 
  * @example
  * // Успешный ответ на чтение holding registers
@@ -18,77 +17,69 @@ import { ErrorManager } from "vrack2-core";
  *   data: Buffer.from([0x00, 0x0A, 0x00, 0x14, 0x01, 0x2C])
  * };
  * 
- * @example
- * // Ответ с исключением (ошибка)
- * const errorResponse: ModbusResponse = {
- *   slaveId: 1,
- *   functionCode: 0x83, // 0x03 + 0x80 (бит ошибки)
- *   byteCount: 0,
- *   data: Buffer.alloc(0),
- *   exceptionCode: 0x02 // Неверный адрес данных
- * };
- * 
  * @description
  * Интерфейс используется методом `ModbusRTU.parseResponse()` для возврата
- * структурированных данных из сырого Modbus-пакета. При наличии бита ошибки
- * в старшем бите functionCode, поле exceptionCode содержит код ошибки.
+ * структурированных данных из сырого Modbus-пакета. Ответ-исключение
+ * (бит `0x80` в коде функции) методом `parseResponse()` не возвращается —
+ * вместо этого бросается формализованная ошибка `V2MODBUS_EXCEPTION`.
  */
 export interface ModbusResponse {
   slaveId: number;
   functionCode: number;
   byteCount: number;
   data: Buffer;
-  exceptionCode?: number;
 }
 
 ErrorManager.register(
   'ModbusRTU',
-  'UVIAK29C3',
   'V2MODBUS_CRC_CHECK_FAILED',
   'CRC check failed',
 );
 
 ErrorManager.register(
   'ModbusRTU',
-  '80CND0PSX',
   'V2MODBUS_PACKET_TOO_SHORT',
   'Packet too short',
 );
 
 ErrorManager.register(
   'ModbusRTU',
-  'TZSQKYJF2',
   'V2MODBUS_WRITE_DATA_REQUIRED_COILS',
   'Write data array required for multiple coils',
 );
 
 ErrorManager.register(
   'ModbusRTU',
-  'HN2K72BEA',
   'V2MODBUS_COILS_COUNT_INVALID',
   'Coils count must be between 1 and 1968',
 );
 
 ErrorManager.register(
   'ModbusRTU',
-  'XDLM87T14',
   'V2MODBUS_WRITE_DATA_REQUIRED_REGISTERS',
   'Write data array required for multiple registers',
 );
 
 ErrorManager.register(
   'ModbusRTU',
-  'GJ94O8NM3',
   'V2MODBUS_REGISTERS_COUNT_INVALID',
   'Registers count must be between 1 and 123',
 );
 
 ErrorManager.register(
   'ModbusRTU',
-  '0BKOC8FGI',
   'V2MODBUS_UNSUPPORTED_FUNCTION_CODE',
   'Unsupported function code',
 );
+
+ErrorManager.register(
+  'ModbusRTU',
+  'V2MODBUS_EXCEPTION',
+  'Modbus RTU slave replied with an exception instead of data', {
+  slaveId: Rule.number().required().example(1).description('Address of the slave that replied with the exception'),
+  functionCode: Rule.number().required().example(3).description('Requested function code (exception bit stripped)'),
+  exceptionCode: Rule.number().required().example(2).description('Exception code returned by the slave'),
+});
 
 /**
  * Cтатический класс для работы с протоколом Modbus RTU,
@@ -326,6 +317,11 @@ export class ModbusRTU {
  * const response = Buffer.from([0x01, 0x03, 0x04, 0x00, 0x0A, 0x00, 0x14, 0x4B, 0x08]);
  * const parsed = ModbusRTU.parseResponse(response);
  * // { slaveId: 1, functionCode: 3, byteCount: 4, data: <Buffer 00 0a 00 14> }
+ * @example
+ * // Ответ-исключение бросает формализованную ошибку, а не возвращается
+ * ModbusRTU.parseResponse(Buffer.from([0x01, 0x82, 0x02, 0xC2, 0x33]));
+ * // throws ErrorManager 'V2MODBUS_EXCEPTION' { slaveId: 1, functionCode: 2, exceptionCode: 2 }
+ * @throws V2MODBUS_PACKET_TOO_SHORT | V2MODBUS_CRC_CHECK_FAILED | V2MODBUS_EXCEPTION
  */
 public static parseResponse(buffer: Buffer): ModbusResponse {
   if (buffer.length < 4) throw ErrorManager.make('V2MODBUS_PACKET_TOO_SHORT') ;
@@ -334,15 +330,14 @@ public static parseResponse(buffer: Buffer): ModbusResponse {
   const slaveId = buffer.readUInt8(0);
   let functionCode = buffer.readUInt8(1);
 
-  // Если исключение 
+  // Если исключение - это ошибка, а не данные: коды сами по себе ни о чём
+  // не говорят читателю, поэтому бросаем формализованную V2MODBUS_EXCEPTION
   if ((functionCode & 0x80) !== 0) {
-    return { 
-      slaveId, 
-      functionCode: functionCode & 0x7F,  // Убираем потенциально лишние биты
-      byteCount: 0, 
-      data: Buffer.alloc(0), 
-      exceptionCode: buffer.readUInt8(2) // Получаем код исключения
-    };
+    throw ErrorManager.make('V2MODBUS_EXCEPTION', {
+      slaveId,
+      functionCode: functionCode & 0x7F,
+      exceptionCode: buffer.readUInt8(2),
+    });
   }
   // По умолчанию считаем что данные это все что между addr cmd | данные | CRC
   let byteCount: number = buffer.length - 4;
@@ -375,6 +370,8 @@ public static parseResponse(buffer: Buffer): ModbusResponse {
    */
   public static isCompletePacket(buffer: Buffer): boolean {
     if (buffer.length < 4) return false;
+    // Модbus-исключение: [slave][func|0x80][code][crc2] — всегда 5 байт
+    if ((buffer.readUInt8(1) & 0x80) !== 0) return buffer.length === 5;
     switch (buffer.readUInt8(1)) {        
       case 0x01: // Read Coils
       case 0x02: // Read Discrete Inputs
