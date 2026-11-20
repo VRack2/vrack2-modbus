@@ -39,6 +39,9 @@ class ModbusRTUSlave extends vrack2_core_1.Device {
     checkOptions() {
         return {
             address: vrack2_core_1.Rule.number().integer().default(1).min(0).max(254).description('Modbus-адрес этого ведомого').example(1),
+            exceptionFuncs: vrack2_core_1.Rule.array().default([]).example([2]).
+                content(vrack2_core_1.Rule.number().integer().min(1).max(127).description('Код функции')).
+                description('Функции, на которые стенд отвечает исключением 0x01 (имитация неподдерживаемой функции)'),
             debug: vrack2_core_1.Rule.boolean().default(false).description('Логировать принятые и отправленные кадры'),
         };
     }
@@ -143,6 +146,10 @@ class ModbusRTUSlave extends vrack2_core_1.Device {
         this.metric('modbus.rtu.requests', this.shares.requests);
         if (this.options.debug)
             this.event('RECV', { func, reg });
+        // имитация неподдерживаемой функции: запрос засчитан, ответ — исключение 0x01
+        if (this.options.exceptionFuncs.includes(func)) {
+            return this.exception(address, func, 0x01);
+        }
         switch (func) {
             case 0x01:
             case 0x02: {

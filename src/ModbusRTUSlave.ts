@@ -33,6 +33,9 @@ export default class ModbusRTUSlave extends Device {
   checkOptions(): { [key: string]: BasicType; } {
     return {
       address: Rule.number().integer().default(1).min(0).max(254).description('Modbus-адрес этого ведомого').example(1),
+      exceptionFuncs: Rule.array().default([]).example([2]).
+        content(Rule.number().integer().min(1).max(127).description('Код функции')).
+        description('Функции, на которые стенд отвечает исключением 0x01 (имитация неподдерживаемой функции)'),
       debug: Rule.boolean().default(false).description('Логировать принятые и отправленные кадры'),
     }
   }
@@ -156,6 +159,11 @@ export default class ModbusRTUSlave extends Device {
     this.metric('modbus.rtu.requests', this.shares.requests as number)
 
     if (this.options.debug) this.event('RECV', { func, reg })
+
+    // имитация неподдерживаемой функции: запрос засчитан, ответ — исключение 0x01
+    if ((this.options.exceptionFuncs as number[]).includes(func)) {
+      return this.exception(address, func, 0x01)
+    }
 
     switch (func) {
       case 0x01:

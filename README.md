@@ -33,6 +33,7 @@ npm test        # node run/run-test.js по каждому tests/*.js
 | `tests/universal-di.js` | маска DI ставится стендом, побитовый разбор, частичный байт, `eachGate` (изменения / каждый цикл) |
 | `tests/universal-do.js` | желание `do*` -> запись `0x0F` -> чтение состояния `0x01` -> `di*`; нет повторных записей при совпадении |
 | `tests/rtu-lab.js` | граф `service-examples/rtu-lab.json` собирается целиком: оба мастера на одной шине против стенда |
+| `tests/rtu-exception.js` | ответ-исключение стенда (`exceptionFuncs`) → `V2MODBUS_EXCEPTION` → offline, без слепых ретраев |
 
 Живой стенд для проверок через MCP/платформу — `service-examples/rtu-lab.json` (порт 15051).
 
