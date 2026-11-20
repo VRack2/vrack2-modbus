@@ -1,5 +1,6 @@
 {
     "UniversalDI": "devices/UniversalDI",
     "UniversalDO": "devices/UniversalDO",
+    "ModbusRTUSlave": "devices/ModbusRTUSlave",
     "Example1": "devices/Example1"
 }
