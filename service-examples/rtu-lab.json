@@ -1,0 +1,57 @@
+{
+	"devices": [
+		{
+			"id": "Virt",
+			"type": "vrack2-net.ConverterVirtual",
+			"options": {
+				"host": "127.0.0.1",
+				"port": 15051,
+				"timeout": 0
+			},
+			"connections": [
+				"Virt.buffer -> Slave.buffer"
+			]
+		},
+		{
+			"id": "Slave",
+			"type": "vrack2-modbus.ModbusRTUSlave",
+			"options": {
+				"address": 1
+			},
+			"connections": [
+				"Slave.buffer -> Virt.buffer"
+			]
+		},
+		{
+			"id": "Bus",
+			"type": "vrack2-net.ConverterBus",
+			"options": {
+				"socket": {
+					"host": "127.0.0.1",
+					"port": 15051
+				},
+				"devices": 2
+			},
+			"connections": [
+				"Bus.dev1 -> UDI.bus",
+				"Bus.dev2 -> UDO.bus"
+			]
+		},
+		{
+			"id": "UDI",
+			"type": "vrack2-modbus.UniversalDI",
+			"options": {
+				"address": 1,
+				"сountDI": 16
+			}
+		},
+		{
+			"id": "UDO",
+			"type": "vrack2-modbus.UniversalDO",
+			"options": {
+				"address": 1,
+				"countDO": 8
+			}
+		}
+	]
+}

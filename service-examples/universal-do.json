@@ -1,0 +1,27 @@
+{
+	"devices": [
+		{
+			"id": "Provider",
+			"type": "vrack2-net.ConverterBus",
+			"options": {
+				"socket": {
+					"host": "172.16.101.88",
+					"port": 4001
+				},
+				"debug": true,
+				"devices": 1
+			}
+		},
+		{
+			"id": "UDO1",
+			"type": "vrack2-modbus.UniversalDO",
+			"options": {
+				"address": 1,
+				"countDO": 8
+			}
+		}
+	],
+	"connections": [
+		"Provider.dev1 -> UDO1.bus"
+	]
+}
